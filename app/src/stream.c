@@ -243,7 +243,7 @@ run_stream(void *data) {
             LOGD("Stop recording because one frame is acquired");
             break;
         }
-        ////////////////////////
+        //END
     }
 
     LOGD("End of frames");
@@ -283,6 +283,7 @@ stream_init(struct stream *stream, socket_t socket,
     stream->has_pending = false;
     // ADDED BY km.yang(2020.07.15): for taking a jpeg image file
     stream->only_one_frame = false;
+    //END
 }
 
 bool

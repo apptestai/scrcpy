@@ -11,6 +11,10 @@
 #include "util/str_util.h"
 
 static const char *adb_command;
+// ADDED BY km.yang(2020.07.16): adb options
+static const char *adb_host; //name of adb server host [default=localhost]
+static const char *adb_port; //port of adb server [default=5037]
+//END
 
 static inline const char *
 get_adb_command(void) {
@@ -21,6 +25,30 @@ get_adb_command(void) {
     }
     return adb_command;
 }
+
+// ADDED BY km.yang(2020.07.16): adb options
+static inline const char *
+get_adb_host(void) {
+    if (!adb_host) {
+        adb_host = getenv("ADB_HOST");
+        if (!adb_host)
+            adb_host = "localhost";
+    }
+    return adb_host;
+}
+//END
+
+// ADDED BY km.yang(2020.07.16): adb options
+static inline const char *
+get_adb_port(void) {
+    if (!adb_port) {
+        adb_port = getenv("ADB_PORT");
+        if (!adb_port)
+            adb_port = "5037";
+    }
+    return adb_port;
+}
+//END
 
 // serialize argv to string "[arg1], [arg2], [arg3]"
 static size_t
@@ -104,17 +132,23 @@ show_adb_err_msg(enum process_result err, const char *const argv[]) {
 
 process_t
 adb_execute(const char *serial, const char *const adb_cmd[], size_t len) {
-    const char *cmd[len + 4];
+    const char *cmd[len + 6];
     int i;
     process_t process;
     cmd[0] = get_adb_command();
+    // ADDED BY km.yang(2020.07.16): adb options
+    cmd[1] = get_adb_host();
+    cmd[2] = get_adb_port();
+    LOGD("adb command[%s], host[%s], port[%s]", cmd[0], cmd[1], cmd[2]);
+    // MODIFIED BY km.yang(2020.07.16): adb options
     if (serial) {
-        cmd[1] = "-s";
-        cmd[2] = serial;
-        i = 3;
+        cmd[3] = "-s";
+        cmd[4] = serial;
+        i = 5;
     } else {
         i = 1;
     }
+    //END
 
     memcpy(&cmd[i], adb_cmd, len * sizeof(const char *));
     cmd[len + i] = NULL;
