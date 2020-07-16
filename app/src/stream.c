@@ -238,6 +238,12 @@ run_stream(void *data) {
             // cannot process packet (error already logged)
             break;
         }
+        // ADDED BY km.yang(2020.07.15): for taking a jpeg image file
+        if(stream->only_one_frame && !stream->has_pending){
+            LOGD("Stop recording because one frame is acquired");
+            break;
+        }
+        ////////////////////////
     }
 
     LOGD("End of frames");
@@ -275,6 +281,8 @@ stream_init(struct stream *stream, socket_t socket,
     stream->decoder = decoder,
     stream->recorder = recorder;
     stream->has_pending = false;
+    // ADDED BY km.yang(2020.07.15): for taking a jpeg image file
+    stream->only_one_frame = false;
 }
 
 bool

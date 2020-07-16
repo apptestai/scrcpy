@@ -22,6 +22,9 @@ scrcpy_print_usage(const char *arg0) {
         "\n"
         "Options:\n"
         "\n"
+        "    --only-one-frame\n"
+        "        Save only one frame data.\n"
+        "\n"
         "    --always-on-top\n"
         "        Make scrcpy window always on top (above other windows).\n"
         "\n"
@@ -526,10 +529,11 @@ guess_record_format(const char *filename) {
 #define OPT_NO_MIPMAPS             1017
 #define OPT_CODEC_OPTIONS          1018
 #define OPT_FORCE_ADB_FORWARD      1019
-
+#define OPT_ONLY_ONE_FRAME         1020 // ADDED BY km.yang(2020.07.15): for taking a jpeg image file
 bool
 scrcpy_parse_args(struct scrcpy_cli_args *args, int argc, char *argv[]) {
     static const struct option long_options[] = {
+        {"only-one-frame",         no_argument,       NULL, OPT_ONLY_ONE_FRAME},
         {"always-on-top",          no_argument,       NULL, OPT_ALWAYS_ON_TOP},
         {"bit-rate",               required_argument, NULL, 'b'},
         {"codec-options",          required_argument, NULL, OPT_CODEC_OPTIONS},
@@ -715,6 +719,10 @@ scrcpy_parse_args(struct scrcpy_cli_args *args, int argc, char *argv[]) {
                 break;
             case OPT_FORCE_ADB_FORWARD:
                 opts->force_adb_forward = true;
+                break;
+            case OPT_ONLY_ONE_FRAME:
+                // ADDED BY km.yang(2020.07.15): for taking a jpeg image file
+                opts->only_one_frame = true;
                 break;
             default:
                 // getopt prints the error message on stderr

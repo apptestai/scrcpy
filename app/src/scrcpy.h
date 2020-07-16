@@ -43,6 +43,7 @@ struct scrcpy_options {
     bool mipmaps;
     bool stay_awake;
     bool force_adb_forward;
+    bool only_one_frame; // ADDED BY km.yang(2020.07.15): for taking a jpeg image file
 };
 
 #define SCRCPY_OPTIONS_DEFAULT { \
