@@ -22,6 +22,7 @@ get_adb_command(void) {
         adb_command = getenv("ADB");
         if (!adb_command)
             adb_command = "adb";
+            LOGD("ADB: %s", adb_command);
     }
     return adb_command;
 }
@@ -33,6 +34,7 @@ get_adb_host(void) {
         adb_host = getenv("ADB_HOST");
         if (!adb_host)
             adb_host = "localhost";
+            LOGD("ADB HOST: %s", adb_host);
     }
     return adb_host;
 }
@@ -45,6 +47,7 @@ get_adb_port(void) {
         adb_port = getenv("ADB_PORT");
         if (!adb_port)
             adb_port = "5037";
+            LOGD("ADB PORT: %s", adb_port);
     }
     return adb_port;
 }
@@ -132,19 +135,20 @@ show_adb_err_msg(enum process_result err, const char *const argv[]) {
 
 process_t
 adb_execute(const char *serial, const char *const adb_cmd[], size_t len) {
-    const char *cmd[len + 6];
+    const char *cmd[len + 8];
     int i;
     process_t process;
     cmd[0] = get_adb_command();
     // ADDED BY km.yang(2020.07.16): adb options
-    cmd[1] = get_adb_host();
-    cmd[2] = get_adb_port();
-    LOGD("adb command[%s], host[%s], port[%s]", cmd[0], cmd[1], cmd[2]);
+    cmd[1] = "-H";
+    cmd[2] = get_adb_host();
+    cmd[3] = "-P";
+    cmd[4] = get_adb_port();
     // MODIFIED BY km.yang(2020.07.16): adb options
     if (serial) {
-        cmd[3] = "-s";
-        cmd[4] = serial;
-        i = 5;
+        cmd[5] = "-s";
+        cmd[6] = serial;
+        i = 7;
     } else {
         i = 1;
     }
