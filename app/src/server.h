@@ -9,6 +9,7 @@
 #include "config.h"
 #include "command.h"
 #include "common.h"
+#include "scrcpy.h"
 #include "util/log.h"
 #include "util/net.h"
 
@@ -17,37 +18,26 @@ struct server {
     process_t process;
     SDL_Thread *wait_server_thread;
     atomic_flag server_socket_closed;
+
+    SDL_mutex *mutex;
+    SDL_cond *process_terminated_cond;
+    bool process_terminated;
+
     socket_t server_socket; // only used if !tunnel_forward
     socket_t video_socket;
     socket_t control_socket;
-    struct port_range port_range;
+    struct sc_port_range port_range;
     uint16_t local_port; // selected from port_range
     bool tunnel_enabled;
     bool tunnel_forward; // use "adb forward" instead of "adb reverse"
 };
 
-#define SERVER_INITIALIZER { \
-    .serial = NULL, \
-    .process = PROCESS_NONE, \
-    .wait_server_thread = NULL, \
-    .server_socket_closed = ATOMIC_FLAG_INIT, \
-    .server_socket = INVALID_SOCKET, \
-    .video_socket = INVALID_SOCKET, \
-    .control_socket = INVALID_SOCKET, \
-    .port_range = { \
-        .first = 0, \
-        .last = 0, \
-    }, \
-    .local_port = 0, \
-    .tunnel_enabled = false, \
-    .tunnel_forward = false, \
-}
-
 struct server_params {
     enum sc_log_level log_level;
     const char *crop;
     const char *codec_options;
-    struct port_range port_range;
+    const char *encoder_name;
+    struct sc_port_range port_range;
     uint16_t max_size;
     uint32_t bit_rate;
     uint16_t max_fps;
@@ -60,7 +50,7 @@ struct server_params {
 };
 
 // init default values
-void
+bool
 server_init(struct server *server);
 
 // push, enable tunnel et start the server

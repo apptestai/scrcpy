@@ -14,7 +14,6 @@ struct video_buffer;
 
 struct stream {
     socket_t socket;
-    struct video_buffer *video_buffer;
     SDL_Thread *thread;
     struct decoder *decoder;
     struct recorder *recorder;
@@ -24,9 +23,6 @@ struct stream {
     // packet is available
     bool has_pending;
     AVPacket pending;
-    // ADDED BY km.yang(2020.07.15): for taking a jpeg image file
-    bool only_one_frame;
-    //END
 };
 
 void
