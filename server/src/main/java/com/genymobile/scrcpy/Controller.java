@@ -8,10 +8,15 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 
 import java.io.IOException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class Controller {
 
     private static final int DEVICE_ID_VIRTUAL = -1;
+
+    private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
 
     private final Device device;
     private final DesktopConnection connection;
@@ -23,6 +28,8 @@ public class Controller {
     private final PointersState pointersState = new PointersState();
     private final MotionEvent.PointerProperties[] pointerProperties = new MotionEvent.PointerProperties[PointersState.MAX_POINTERS];
     private final MotionEvent.PointerCoords[] pointerCoords = new MotionEvent.PointerCoords[PointersState.MAX_POINTERS];
+
+    private boolean keepPowerModeOff;
 
     public Controller(Device device, DesktopConnection connection) {
         this.device = device;
@@ -47,7 +54,7 @@ public class Controller {
 
     public void control() throws IOException {
         // on start, power on the device
-        if (!device.isScreenOn()) {
+        if (!Device.isScreenOn()) {
             device.injectKeycode(KeyEvent.KEYCODE_POWER);
 
             // dirty hack
@@ -74,7 +81,7 @@ public class Controller {
         switch (msg.getType()) {
             case ControlMessage.TYPE_INJECT_KEYCODE:
                 if (device.supportsInputEvents()) {
-                    injectKeycode(msg.getAction(), msg.getKeycode(), msg.getMetaState());
+                    injectKeycode(msg.getAction(), msg.getKeycode(), msg.getRepeat(), msg.getMetaState());
                 }
                 break;
             case ControlMessage.TYPE_INJECT_TEXT:
@@ -98,40 +105,43 @@ public class Controller {
                 }
                 break;
             case ControlMessage.TYPE_EXPAND_NOTIFICATION_PANEL:
-                device.expandNotificationPanel();
+                Device.expandNotificationPanel();
                 break;
             case ControlMessage.TYPE_COLLAPSE_NOTIFICATION_PANEL:
-                device.collapsePanels();
+                Device.collapsePanels();
                 break;
             case ControlMessage.TYPE_GET_CLIPBOARD:
-                String clipboardText = device.getClipboardText();
+                String clipboardText = Device.getClipboardText();
                 if (clipboardText != null) {
                     sender.pushClipboardText(clipboardText);
                 }
                 break;
             case ControlMessage.TYPE_SET_CLIPBOARD:
-                boolean paste = (msg.getFlags() & ControlMessage.FLAGS_PASTE) != 0;
-                setClipboard(msg.getText(), paste);
+                setClipboard(msg.getText(), msg.getPaste());
                 break;
             case ControlMessage.TYPE_SET_SCREEN_POWER_MODE:
                 if (device.supportsInputEvents()) {
                     int mode = msg.getAction();
-                    boolean setPowerModeOk = device.setScreenPowerMode(mode);
+                    boolean setPowerModeOk = Device.setScreenPowerMode(mode);
                     if (setPowerModeOk) {
+                        keepPowerModeOff = mode == Device.POWER_MODE_OFF;
                         Ln.i("Device screen turned " + (mode == Device.POWER_MODE_OFF ? "off" : "on"));
                     }
                 }
                 break;
             case ControlMessage.TYPE_ROTATE_DEVICE:
-                device.rotateDevice();
+                Device.rotateDevice();
                 break;
             default:
                 // do nothing
         }
     }
 
-    private boolean injectKeycode(int action, int keycode, int metaState) {
-        return device.injectKeyEvent(action, keycode, 0, metaState);
+    private boolean injectKeycode(int action, int keycode, int repeat, int metaState) {
+        if (keepPowerModeOff && action == KeyEvent.ACTION_UP && (keycode == KeyEvent.KEYCODE_POWER || keycode == KeyEvent.KEYCODE_WAKEUP)) {
+            schedulePowerModeOff();
+        }
+        return device.injectKeyEvent(action, keycode, repeat, metaState);
     }
 
     private boolean injectChar(char c) {
@@ -166,7 +176,7 @@ public class Controller {
 
         Point point = device.getPhysicalPoint(position);
         if (point == null) {
-            // ignore event
+            Ln.w("Ignore touch event, it was generated for a different device size");
             return false;
         }
 
@@ -195,9 +205,13 @@ public class Controller {
             }
         }
 
+        // Right-click and middle-click only work if the source is a mouse
+        boolean nonPrimaryButtonPressed = (buttons & ~MotionEvent.BUTTON_PRIMARY) != 0;
+        int source = nonPrimaryButtonPressed ? InputDevice.SOURCE_MOUSE : InputDevice.SOURCE_TOUCHSCREEN;
+
         MotionEvent event = MotionEvent
-                .obtain(lastTouchDown, now, action, pointerCount, pointerProperties, pointerCoords, 0, buttons, 1f, 1f, DEVICE_ID_VIRTUAL, 0,
-                        InputDevice.SOURCE_TOUCHSCREEN, 0);
+                .obtain(lastTouchDown, now, action, pointerCount, pointerProperties, pointerCoords, 0, buttons, 1f, 1f, DEVICE_ID_VIRTUAL, 0, source,
+                        0);
         return device.injectEvent(event);
     }
 
@@ -224,8 +238,24 @@ public class Controller {
         return device.injectEvent(event);
     }
 
+    /**
+     * Schedule a call to set power mode to off after a small delay.
+     */
+    private static void schedulePowerModeOff() {
+        EXECUTOR.schedule(new Runnable() {
+            @Override
+            public void run() {
+                Ln.i("Forcing screen off");
+                Device.setScreenPowerMode(Device.POWER_MODE_OFF);
+            }
+        }, 200, TimeUnit.MILLISECONDS);
+    }
+
     private boolean pressBackOrTurnScreenOn() {
-        int keycode = device.isScreenOn() ? KeyEvent.KEYCODE_BACK : KeyEvent.KEYCODE_POWER;
+        int keycode = Device.isScreenOn() ? KeyEvent.KEYCODE_BACK : KeyEvent.KEYCODE_POWER;
+        if (keepPowerModeOff && keycode == KeyEvent.KEYCODE_POWER) {
+            schedulePowerModeOff();
+        }
         return device.injectKeycode(keycode);
     }
 

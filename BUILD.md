@@ -64,7 +64,7 @@ sudo apt install gcc git pkg-config meson ninja-build \
                  libsdl2-dev
 
 # server build dependencies
-sudo apt install openjdk-8-jdk
+sudo apt install openjdk-11-jdk
 ```
 
 On old versions (like Ubuntu 16.04), `meson` is too old. In that case, install
@@ -254,10 +254,10 @@ You can then [run](README.md#run) _scrcpy_.
 
 ## Prebuilt server
 
- - [`scrcpy-server-v1.14`][direct-scrcpy-server]  
-   _(SHA-256: 1d1b18a2b80e956771fd63b99b414d2d028713a8f12ddfa5a369709ad4295620)_
+ - [`scrcpy-server-v1.17`][direct-scrcpy-server]  
+   _(SHA-256: 11b5ad2d1bc9b9730fb7254a78efd71a8ff46b1938ff468e47a21b653a1b6725_
 
-[direct-scrcpy-server]: https://github.com/Genymobile/scrcpy/releases/download/v1.14/scrcpy-server-v1.14
+[direct-scrcpy-server]: https://github.com/Genymobile/scrcpy/releases/download/v1.17/scrcpy-server-v1.17
 
 Download the prebuilt server somewhere, and specify its path during the Meson
 configuration:
