@@ -169,6 +169,104 @@ enum event_result {
     EVENT_RESULT_STOPPED_BY_EOS,
 };
 
+// ADDED BY km.yang(2021.02.02): jpg recording options 
+/**
+ * https://github.com/kbehouse/h264tojpg/blob/857d9cbe8b23ae65225b57d3d43d851cf1fe84d3/h264tojpg.h
+ */
+static int
+jpg_save(const AVFrame *pFrame, char *filename) {
+    int width = pFrame->width;
+    int height = pFrame->height;
+    AVCodecContext *pCodeCtx = NULL;
+
+    AVFormatContext *pFormatCtx = avformat_alloc_context();
+    pFormatCtx->oformat = av_guess_format("mjpeg", NULL, NULL);
+
+    if (avio_open(&pFormatCtx->pb, filename, AVIO_FLAG_READ_WRITE) < 0) {
+        LOGW("Couldn't open output file.");
+        return -1;
+    }
+
+    AVStream *pAVStream = avformat_new_stream(pFormatCtx, 0);
+    if (pAVStream == NULL) {
+        return -1;
+    }
+
+    AVCodecParameters *parameters = pAVStream->codecpar;
+    parameters->codec_id = pFormatCtx->oformat->video_codec;
+    parameters->codec_type = AVMEDIA_TYPE_VIDEO;
+    parameters->format = AV_PIX_FMT_YUVJ420P;
+    parameters->width = width; 
+    parameters->height = height ;
+
+    AVCodec *pCodec = avcodec_find_encoder(pAVStream->codecpar->codec_id);
+
+    if (!pCodec) {
+        LOGW("Could not find encoder\n");
+        return -1;
+    }
+
+    pCodeCtx = avcodec_alloc_context3(pCodec);
+    if (!pCodeCtx) {
+        LOGE("Could not allocate video codec context\n");
+        exit(1);
+    }
+
+    if ((avcodec_parameters_to_context(pCodeCtx, pAVStream->codecpar)) < 0) {
+        LOGE("Failed to copy %s codec parameters to decoder context\n", av_get_media_type_string(AVMEDIA_TYPE_VIDEO));
+        return -1;
+    }
+
+    pCodeCtx->time_base = (AVRational) {1, 25};
+
+    if (avcodec_open2(pCodeCtx, pCodec, NULL) < 0) {
+        LOGW("Could not open codec.");
+        return -1;
+    }
+
+    int ret = avformat_write_header(pFormatCtx, NULL);
+    if (ret < 0) {
+        LOGW("write_header fail\n");
+        return -1;
+    }
+    int y_size = width * height;
+
+    //Encode
+    AVPacket pkt;
+    av_new_packet(&pkt, y_size * 3);
+
+    ret = avcodec_send_frame(pCodeCtx, pFrame);
+    if (ret < 0) {
+        LOGW("Could not avcodec_send_frame.");
+        return -1;
+    }
+
+    ret = avcodec_receive_packet(pCodeCtx, &pkt);
+    if (ret < 0) {
+        LOGW("Could not avcodec_receive_packet");
+        return -1;
+    }
+
+    ret = av_write_frame(pFormatCtx, &pkt);
+
+    if (ret < 0) {
+        LOGW("Could not av_write_frame");
+        return -1;
+    }
+
+    av_packet_unref(&pkt);
+
+    av_write_trailer(pFormatCtx);
+
+    avcodec_free_context(&pCodeCtx);
+    //avcodec_close(pCodeCtx);
+    avio_close(pFormatCtx->pb);
+    avformat_free_context(pFormatCtx);
+
+    return 0;
+}
+// END
+
 static enum event_result
 handle_event(SDL_Event *event, const struct scrcpy_options *options) {
     switch (event->type) {
@@ -179,6 +277,16 @@ handle_event(SDL_Event *event, const struct scrcpy_options *options) {
             LOGD("User requested to quit");
             return EVENT_RESULT_STOPPED_BY_USER;
         case EVENT_NEW_FRAME:
+            // ADDED BY km.yang(2021.02.02): jpg recording options 
+            if (options->record_frames) {
+                char filename[256];
+                sprintf(filename, options->record_dir, decoder.codec_ctx->frame_number);
+                const AVFrame *frame = video_buffer_consume_rendered_frame(&video_buffer);
+                jpg_save(frame, filename);
+                // LOGD("handleEVENT_NEW_FRAME");
+                break;
+            }
+            // END
             if (!screen.has_frame) {
                 screen.has_frame = true;
                 // this is the very first frame, show the window
@@ -385,6 +493,22 @@ scrcpy(const struct scrcpy_options *options) {
         decoder_init(&decoder, &video_buffer);
         dec = &decoder;
     }
+    // ADDED BY km.yang(2021.02.02): record jpeg
+    else if(options->record_frames) {
+        if (!fps_counter_init(&fps_counter)) {
+            goto end;
+        }
+        fps_counter_initialized = true;
+
+        if (!video_buffer_init(&video_buffer, &fps_counter,
+                               options->render_expired_frames)) {
+            goto end;
+        }
+        video_buffer_initialized = true;
+        decoder_init(&decoder, &video_buffer);
+        dec = &decoder;
+    }
+    // END
 
     struct recorder *rec = NULL;
     if (record) {

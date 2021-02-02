@@ -18,8 +18,9 @@ scrcpy_print_usage(const char *arg0) {
         "\n"
         "Options:\n"
         "\n"
-        "    --only-one-frame\n"
-        "        Save only one frame data.\n"
+        "    --record-frames file-%%d.jpg\n"
+        "        Record screen to jpegs.\n"
+        "        The '%%d' of filename will be assigned a frame_pts.\n"
         "\n"
         "    --always-on-top\n"
         "        Make scrcpy window always on top (above other windows).\n"
@@ -645,6 +646,10 @@ guess_record_format(const char *filename) {
     return 0;
 }
 
+// ADDED BY km.yang(2021.02.02): jpg recording options
+#define OPT_RECORD_FRAMES          9000
+// END
+
 #define OPT_RENDER_EXPIRED_FRAMES  1000
 #define OPT_WINDOW_TITLE           1001
 #define OPT_PUSH_TARGET            1002
@@ -675,6 +680,9 @@ guess_record_format(const char *filename) {
 bool
 scrcpy_parse_args(struct scrcpy_cli_args *args, int argc, char *argv[]) {
     static const struct option long_options[] = {
+        // ADDED BY km.yang(2021.02.02): jpg recording options
+        {"record-frames",          required_argument, NULL, OPT_RECORD_FRAMES},
+        // END
         {"always-on-top",          no_argument,       NULL, OPT_ALWAYS_ON_TOP},
         {"bit-rate",               required_argument, NULL, 'b'},
         {"codec-options",          required_argument, NULL, OPT_CODEC_OPTIONS},
@@ -732,6 +740,12 @@ scrcpy_parse_args(struct scrcpy_cli_args *args, int argc, char *argv[]) {
     while ((c = getopt_long(argc, argv, "b:c:fF:hm:nNp:r:s:StTvV:w",
                             long_options, NULL)) != -1) {
         switch (c) {
+            // ADDED BY km.yang(2021.02.02): jpg recording options
+            case OPT_RECORD_FRAMES:
+                opts->record_dir = optarg;
+                opts->record_frames = true;
+                break;
+            // END
             case 'b':
                 if (!parse_bit_rate(optarg, &opts->bit_rate)) {
                     return false;
@@ -895,10 +909,20 @@ scrcpy_parse_args(struct scrcpy_cli_args *args, int argc, char *argv[]) {
         }
     }
 
-    if (!opts->display && !opts->record_filename) {
-        LOGE("-N/--no-display requires screen recording (-r/--record)");
+    // MODIFIED BY km.yang(2021.02.02): jpg recording options
+    // if (!opts->display && !opts->record_filename) {
+    //     LOGE("-N/--no-display requires screen recording (-r/--record)");
+    //     return false;
+    // }
+    if (!opts->display && (!opts->record_filename && !opts->record_frames)) {
+        LOGE("-N/--no-display requires screen recording (-r/--record) or (--record-frames)");
         return false;
     }
+    if (opts->display && opts->record_frames) {
+        LOGE("--record-frames requires -N/--no-display");
+        return false;
+    }
+    // END
 
     int index = optind;
     if (index < argc) {
