@@ -47,7 +47,7 @@ struct scrcpy_options {
     // ADDED BY km.yang(2021.02.02): jpg recording options 
     bool record_frames; //record frames to jpeg images
     const char *record_dir; //record frames to jpeg images
-    // 
+    // END
     const char *serial;
     const char *crop;
     const char *record_filename;

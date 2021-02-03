@@ -18,10 +18,13 @@ scrcpy_print_usage(const char *arg0) {
         "\n"
         "Options:\n"
         "\n"
-        "    --record-frames file-%%d.jpg\n"
+        // ADDED BY km.yang(2021.02.02): jpg recording options
+        "    --record-frames file-%%d-%%u.jpg\n"
         "        Record screen to jpegs.\n"
         "        The '%%d' of filename will be assigned a frame_pts.\n"
+        "        The '%%u' of filename will be assigned a time ticks(a milliseconds since the SDL library initialization).\n"
         "\n"
+        // END
         "    --always-on-top\n"
         "        Make scrcpy window always on top (above other windows).\n"
         "\n"

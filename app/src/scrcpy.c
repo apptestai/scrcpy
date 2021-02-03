@@ -174,7 +174,7 @@ enum event_result {
  * https://github.com/kbehouse/h264tojpg/blob/857d9cbe8b23ae65225b57d3d43d851cf1fe84d3/h264tojpg.h
  */
 static int
-jpg_save(const AVFrame *pFrame, char *filename) {
+record_frames_as_jpeg(const AVFrame *pFrame, char *filename) {
     int width = pFrame->width;
     int height = pFrame->height;
     AVCodecContext *pCodeCtx = NULL;
@@ -265,6 +265,29 @@ jpg_save(const AVFrame *pFrame, char *filename) {
 
     return 0;
 }
+
+static bool
+format_filename(char *filename, const char *record_dir, int frame_number) {
+    if (!record_dir) {
+        return filename;
+    }
+    
+    if (strstr(record_dir, "%d")) {
+        if (strstr(record_dir, "%u")) {
+            uint32_t now = SDL_GetTicks();
+            sprintf(filename, record_dir, frame_number, now);
+        } else {
+            sprintf(filename, record_dir, frame_number);
+        }
+        return filename;
+    } else if (strstr(record_dir, "%u")) {
+        uint32_t now = SDL_GetTicks();
+        sprintf(filename, record_dir, now);
+        return filename;
+    }
+    sprintf(filename, record_dir, 0);
+    return record_dir;
+}
 // END
 
 static enum event_result
@@ -279,10 +302,13 @@ handle_event(SDL_Event *event, const struct scrcpy_options *options) {
         case EVENT_NEW_FRAME:
             // ADDED BY km.yang(2021.02.02): jpg recording options 
             if (options->record_frames) {
-                char filename[256];
-                sprintf(filename, options->record_dir, decoder.codec_ctx->frame_number);
+                char *filename = SDL_malloc(256);
+                format_filename(filename, options->record_dir, decoder.codec_ctx->frame_number);
+                mutex_lock(video_buffer.mutex);
                 const AVFrame *frame = video_buffer_consume_rendered_frame(&video_buffer);
-                jpg_save(frame, filename);
+                record_frames_as_jpeg(frame, filename);
+                mutex_unlock(video_buffer.mutex);
+                SDL_free(filename);
                 // LOGD("handleEVENT_NEW_FRAME");
                 break;
             }
