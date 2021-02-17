@@ -38,13 +38,18 @@ public final class CleanUp {
         builder.start();
     }
 
+    // MODIFIED BY MO: km.yang(2021.02.17): do not cleanup server file
+    // private static void unlinkSelf() {
+    //     try {
+    //         new File(SERVER_PATH).delete();
+    //     } catch (Exception e) {
+    //         Ln.e("Could not unlink server", e);
+    //     }
+    // }
     private static void unlinkSelf() {
-        try {
-            new File(SERVER_PATH).delete();
-        } catch (Exception e) {
-            Ln.e("Could not unlink server", e);
-        }
+        //DO NOTHING
     }
+    // END
 
     public static void main(String... args) {
         unlinkSelf();

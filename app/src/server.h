@@ -33,6 +33,9 @@ struct server {
 };
 
 struct server_params {
+    //ADDED BY km.yang(2021.02.17): add an option for server
+    bool pushserver;
+    // END
     enum sc_log_level log_level;
     const char *crop;
     const char *codec_options;

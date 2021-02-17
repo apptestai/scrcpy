@@ -455,6 +455,9 @@ scrcpy(const struct scrcpy_options *options) {
 
     bool record = !!options->record_filename;
     struct server_params params = {
+        //ADDED BY km.yang(2021.02.17): add an option for server
+        .pushserver = options->pushserver,
+        // END
         .log_level = options->log_level,
         .crop = options->crop,
         .port_range = options->port_range,

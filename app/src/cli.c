@@ -18,6 +18,11 @@ scrcpy_print_usage(const char *arg0) {
         "\n"
         "Options:\n"
         "\n"
+        // ADDED BY km.yang(2021.02.17): add an option for server
+        "    --no-pushserver\n"
+        "        Do not push server to device.\n"
+        "\n"
+        // END
         // ADDED BY km.yang(2021.02.02): jpg recording options
         "    --record-frames file-%%d-%%u.jpg\n"
         "        Record screen to jpegs.\n"
@@ -649,8 +654,11 @@ guess_record_format(const char *filename) {
     return 0;
 }
 
+// ADDED BY km.yang(2021.02.17): add an option for server
+#define OPT_NO_PUSHSERVER          9000
+// END
 // ADDED BY km.yang(2021.02.02): jpg recording options
-#define OPT_RECORD_FRAMES          9000
+#define OPT_RECORD_FRAMES          9001
 // END
 
 #define OPT_RENDER_EXPIRED_FRAMES  1000
@@ -683,6 +691,9 @@ guess_record_format(const char *filename) {
 bool
 scrcpy_parse_args(struct scrcpy_cli_args *args, int argc, char *argv[]) {
     static const struct option long_options[] = {
+        // ADDED BY km.yang(2021.02.17): add an option for server
+        {"no-pushserver",          no_argument,       NULL, OPT_NO_PUSHSERVER},
+        //END
         // ADDED BY km.yang(2021.02.02): jpg recording options
         {"record-frames",          required_argument, NULL, OPT_RECORD_FRAMES},
         // END
@@ -743,6 +754,11 @@ scrcpy_parse_args(struct scrcpy_cli_args *args, int argc, char *argv[]) {
     while ((c = getopt_long(argc, argv, "b:c:fF:hm:nNp:r:s:StTvV:w",
                             long_options, NULL)) != -1) {
         switch (c) {
+            // ADDED BY km.yang(2021.02.17): add an option for server
+            case OPT_NO_PUSHSERVER:
+                opts->pushserver = false;
+                break;
+            // END
             // ADDED BY km.yang(2021.02.02): jpg recording options
             case OPT_RECORD_FRAMES:
                 opts->record_dir = optarg;

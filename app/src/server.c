@@ -423,9 +423,14 @@ server_start(struct server *server, const char *serial,
         }
     }
 
-    if (!push_server(serial)) {
+    // MODIFIED BY km.yang(2021.02.17): add an option for server
+    // if (!push_server(serial)) {
+    //     goto error1;
+    // }
+    if (params->pushserver && !push_server(serial)) {
         goto error1;
     }
+    // END
 
     if (!enable_tunnel_any_port(server, params->port_range,
                                 params->force_adb_forward)) {
