@@ -266,6 +266,27 @@ record_frames_as_jpeg(const AVFrame *pFrame, char *filename) {
     return 0;
 }
 
+static double
+epoch_double(struct timespec *tv) {
+    char *time_str = SDL_malloc(32);
+    sprintf(time_str, "%ld.%.9ld", tv->tv_sec, tv->tv_nsec);
+    double epoch = atof(time_str);
+    SDL_free(time_str);
+    return epoch;
+}
+
+static long int
+current_timestamp() {
+    struct timespec tv;
+    if(clock_gettime(CLOCK_REALTIME, &tv)) {
+        return 0;
+    }
+    double epoch;
+    epoch = epoch_double(&tv);
+    epoch = round(epoch*1e3);
+    return (long int) epoch;
+}
+
 static bool
 format_filename(char *filename, const char *record_dir, int frame_number) {
     if (!record_dir) {
@@ -273,16 +294,18 @@ format_filename(char *filename, const char *record_dir, int frame_number) {
     }
     
     if (strstr(record_dir, "%d")) {
-        if (strstr(record_dir, "%u")) {
-            uint32_t now = SDL_GetTicks();
-            sprintf(filename, record_dir, frame_number, now);
+        if (strstr(record_dir, "%ld")) {
+            // uint32_t now = SDL_GetTicks();
+            // uint64_t now = (unsigned long)time(NULL);
+            sprintf(filename, record_dir, frame_number, current_timestamp());
         } else {
             sprintf(filename, record_dir, frame_number);
         }
         return filename;
-    } else if (strstr(record_dir, "%u")) {
-        uint32_t now = SDL_GetTicks();
-        sprintf(filename, record_dir, now);
+    } else if (strstr(record_dir, "%ld")) {
+        // uint32_t now = SDL_GetTicks();
+        // uint64_t now = (unsigned long)time(NULL);
+        sprintf(filename, record_dir, current_timestamp());
         return filename;
     }
     sprintf(filename, record_dir, 0);
