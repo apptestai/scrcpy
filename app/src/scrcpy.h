@@ -44,6 +44,9 @@ struct sc_port_range {
 #define SC_WINDOW_POSITION_UNDEFINED (-0x8000)
 
 struct scrcpy_options {
+    // ADDED BY km.yang(2021.02.22): add an option for taking a jpeg image file
+    bool only_one_frame;
+    // END
     // ADDED BY km.yang(2021.02.17): add an option for server
     bool pushserver;
     // END
@@ -92,6 +95,7 @@ struct scrcpy_options {
 };
 
 #define SCRCPY_OPTIONS_DEFAULT { \
+    .only_one_frame = false, \
     .pushserver = true, \
     .record_frames = false, \
     .record_dir = NULL, \

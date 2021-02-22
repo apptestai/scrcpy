@@ -587,6 +587,9 @@ scrcpy(const struct scrcpy_options *options) {
     av_log_set_callback(av_log_callback);
 
     stream_init(&stream, server.video_socket, dec, rec);
+    // ADDED BY km.yang(2021.02.22): add an option for taking a jpeg image file
+    stream.only_one_frame = options->only_one_frame;
+    // END
     // now we consumed the header values, the socket receives the video stream
     // start the stream
     if (!stream_start(&stream)) {

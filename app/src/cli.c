@@ -17,7 +17,12 @@ scrcpy_print_usage(const char *arg0) {
         "Usage: %s [options]\n"
         "\n"
         "Options:\n"
+        // ADDED BY km.yang(2021.02.22): add an option for taking a jpeg image file
         "\n"
+        "    --only-one-frame\n"
+        "        Save only one frame data.\n"
+        "\n"
+        // END
         // ADDED BY km.yang(2021.02.17): add an option for server
         "    --no-pushserver\n"
         "        Do not push server to device.\n"
@@ -660,6 +665,9 @@ guess_record_format(const char *filename) {
 // ADDED BY km.yang(2021.02.02): jpg recording options
 #define OPT_RECORD_FRAMES          9001
 // END
+// ADDED BY km.yang(2021.02.22): add an option for taking a jpeg image file
+#define OPT_ONLY_ONE_FRAME         9002
+// END
 
 #define OPT_RENDER_EXPIRED_FRAMES  1000
 #define OPT_WINDOW_TITLE           1001
@@ -691,6 +699,9 @@ guess_record_format(const char *filename) {
 bool
 scrcpy_parse_args(struct scrcpy_cli_args *args, int argc, char *argv[]) {
     static const struct option long_options[] = {
+        // ADDED BY km.yang(2021.02.22): add an option for taking a jpeg image file
+        {"only-one-frame",         no_argument,       NULL, OPT_ONLY_ONE_FRAME},
+        // END
         // ADDED BY km.yang(2021.02.17): add an option for server
         {"no-pushserver",          no_argument,       NULL, OPT_NO_PUSHSERVER},
         //END
@@ -754,6 +765,11 @@ scrcpy_parse_args(struct scrcpy_cli_args *args, int argc, char *argv[]) {
     while ((c = getopt_long(argc, argv, "b:c:fF:hm:nNp:r:s:StTvV:w",
                             long_options, NULL)) != -1) {
         switch (c) {
+            // ADDED BY km.yang(2021.02.22): add an option for taking a jpeg image file
+            case OPT_ONLY_ONE_FRAME:
+                opts->only_one_frame = true;
+                break;
+            // END
             // ADDED BY km.yang(2021.02.17): add an option for server
             case OPT_NO_PUSHSERVER:
                 opts->pushserver = false;

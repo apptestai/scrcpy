@@ -23,6 +23,9 @@ struct stream {
     // packet is available
     bool has_pending;
     AVPacket pending;
+    // ADDED BY km.yang(2021.02.22): add an option for taking a jpeg image file
+    bool only_one_frame;
+    // END
 };
 
 void

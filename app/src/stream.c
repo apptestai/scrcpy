@@ -238,6 +238,13 @@ run_stream(void *data) {
             // cannot process packet (error already logged)
             break;
         }
+
+        // ADDED BY km.yang(2021.02.22): add an option for taking a jpeg image file
+        if(stream->only_one_frame && !stream->has_pending){
+            LOGD("Stop recording because one frame is acquired");
+            break;
+        }
+        // END
     }
 
     LOGD("End of frames");
