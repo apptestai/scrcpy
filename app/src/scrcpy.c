@@ -1,3 +1,9 @@
+// ADDED BY km.yang(2021.02.02): jpg recording options 
+#define _POSIX_C_SOURCE 200809L
+#include <time.h>
+#define ROUND(x) ((x)>=0?(double)((x)+0.5):(double)((x)-0.5))
+// END
+
 #include "scrcpy.h"
 
 #include <stdio.h>
@@ -283,7 +289,7 @@ current_timestamp() {
     }
     double epoch;
     epoch = epoch_double(&tv);
-    epoch = round(epoch*1e3);
+    epoch = ROUND(epoch*1e3);
     return (long int) epoch;
 }
 
