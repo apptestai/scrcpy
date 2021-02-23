@@ -2,6 +2,8 @@
 #define _POSIX_C_SOURCE 200809L
 #include <time.h>
 #define ROUND(x) ((x)>=0?(double)((x)+0.5):(double)((x)-0.5))
+#define NSEC_PER_SEC 1000000000L
+#define MSEC_PER_SEC 1000L
 // END
 
 #include "scrcpy.h"
@@ -272,13 +274,14 @@ record_frames_as_jpeg(const AVFrame *pFrame, char *filename) {
     return 0;
 }
 
-static double
-epoch_double(struct timespec *tv) {
-    char *time_str = SDL_malloc(32);
-    sprintf(time_str, "%ld.%.9ld", tv->tv_sec, tv->tv_nsec);
-    double epoch = atof(time_str);
-    SDL_free(time_str);
-    return epoch;
+// static long long
+// timespec_to_ns(struct timespec *tv) {
+//     return ((long long)tv->tv_sec*NSEC_PER_SEC) + tv->tv_nsec;
+// }
+
+static long int
+timespec_to_ms(struct timespec *tv) {
+    return (long int)(((long int)tv->tv_sec*NSEC_PER_SEC) + tv->tv_nsec) / 1e6;
 }
 
 static long int
@@ -287,10 +290,13 @@ current_timestamp() {
     if(clock_gettime(CLOCK_REALTIME, &tv)) {
         return 0;
     }
-    double epoch;
-    epoch = epoch_double(&tv);
-    epoch = ROUND(epoch*1e3);
-    return (long int) epoch;
+    
+    return timespec_to_ms(&tv);
+    // return ((long int)tv.tv_sec*NSEC_PER_SEC) + tv.tv_nsec;
+    // double epoch;
+    // epoch = epoch_double(&tv);
+    // epoch = ROUND(epoch*1e3);
+    // return (long int) epoch;
 }
 
 static bool
