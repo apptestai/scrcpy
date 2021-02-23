@@ -277,14 +277,15 @@ epoch_double(struct timespec *tv) {
 
 static long int
 current_timestamp() {
-    struct timespec tv;
-    if(clock_gettime(CLOCK_REALTIME, &tv)) {
-        return 0;
-    }
-    double epoch;
-    epoch = epoch_double(&tv);
-    epoch = round(epoch*1e3);
-    return (long int) epoch;
+    // struct timespec tv;
+    // if(clock_gettime(CLOCK_REALTIME, &tv)) {
+    //     return 0;
+    // }
+    // double epoch;
+    // epoch = epoch_double(&tv);
+    // epoch = round(epoch*1e3);
+    // return (long int) epoch;
+    return (long int)0;
 }
 
 static bool
