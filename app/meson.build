@@ -21,7 +21,10 @@ src = [
     'src/tiny_xpm.c',
     'src/video_buffer.c',
     'src/util/net.c',
-    'src/util/str_util.c'
+    'src/util/str_util.c',
+    # ADDED BY km.yang(2021.02.17): attach timestamp to filename
+    'src/util/timestamp.c'
+    # END
 ]
 
 if not get_option('crossbuild_windows')

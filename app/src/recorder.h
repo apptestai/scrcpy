@@ -37,6 +37,11 @@ struct recorder {
     // "previous" is only accessed from the recorder thread, so it does not
     // need to be protected by the mutex
     struct record_packet *previous;
+
+    // ADDED BY km.yang(2021.02.17): attach timestamp to filename
+    long int timestamp;
+    // END
+
 };
 
 bool

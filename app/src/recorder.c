@@ -8,6 +8,10 @@
 #include "util/lock.h"
 #include "util/log.h"
 
+// ADDED BY km.yang(2021.02.17): attach timestamp to filename
+#include "util/timestamp.h"
+// END
+
 static const AVRational SCRCPY_TIME_BASE = {1, 1000000}; // timestamps in us
 
 static const AVOutputFormat *
@@ -93,7 +97,9 @@ recorder_init(struct recorder *recorder,
     recorder->declared_frame_size = declared_frame_size;
     recorder->header_written = false;
     recorder->previous = NULL;
-
+    // ADDED BY km.yang(2021.02.17): attach timestamp to filename
+    recorder->timestamp = 0;
+    // END
     return true;
 }
 
@@ -371,6 +377,13 @@ recorder_push(struct recorder *recorder, const AVPacket *packet) {
         mutex_unlock(recorder->mutex);
         return false;
     }
+
+    // ADDED BY km.yang(2021.02.17): attach timestamp to filename
+    if (recorder->timestamp == 0) {
+        recorder->timestamp = current_timestamp();
+        LOGI("Init recorder timestamp %ld", recorder->timestamp);
+    }
+    // END
 
     queue_push(&recorder->queue, next, rec);
     cond_signal(recorder->queue_cond);

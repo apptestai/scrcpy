@@ -1,11 +1,3 @@
-// ADDED BY km.yang(2021.02.02): jpg recording options 
-#define _POSIX_C_SOURCE 200809L
-#include <time.h>
-#define ROUND(x) ((x)>=0?(double)((x)+0.5):(double)((x)-0.5))
-#define NSEC_PER_SEC 1000000000L
-#define MSEC_PER_SEC 1000L
-// END
-
 #include "scrcpy.h"
 
 #include <stdio.h>
@@ -41,6 +33,9 @@
 #include "util/lock.h"
 #include "util/log.h"
 #include "util/net.h"
+// ADDED BY km.yang(2021.02.17): attach timestamp to filename
+#include "util/timestamp.h"
+// END
 
 static struct server server;
 static struct screen screen = SCREEN_INITIALIZER;
@@ -274,33 +269,8 @@ record_frames_as_jpeg(const AVFrame *pFrame, char *filename) {
     return 0;
 }
 
-// static long long
-// timespec_to_ns(struct timespec *tv) {
-//     return ((long long)tv->tv_sec*NSEC_PER_SEC) + tv->tv_nsec;
-// }
-
-static long int
-timespec_to_ms(struct timespec *tv) {
-    return (long int)(((long int)tv->tv_sec*NSEC_PER_SEC) + tv->tv_nsec) / 1e6;
-}
-
-static long int
-current_timestamp() {
-    struct timespec tv;
-    if(clock_gettime(CLOCK_REALTIME, &tv)) {
-        return 0;
-    }
-    
-    return timespec_to_ms(&tv);
-    // return ((long int)tv.tv_sec*NSEC_PER_SEC) + tv.tv_nsec;
-    // double epoch;
-    // epoch = epoch_double(&tv);
-    // epoch = ROUND(epoch*1e3);
-    // return (long int) epoch;
-}
-
 static bool
-format_filename(char *filename, const char *record_dir, int frame_number) {
+format_filename(char *filename, const char *record_dir, int frame_number, long int timestamp) {
     if (!record_dir) {
         return filename;
     }
@@ -309,7 +279,11 @@ format_filename(char *filename, const char *record_dir, int frame_number) {
         if (strstr(record_dir, "%ld")) {
             // uint32_t now = SDL_GetTicks();
             // uint64_t now = (unsigned long)time(NULL);
-            sprintf(filename, record_dir, frame_number, current_timestamp());
+            if (timestamp) {
+                sprintf(filename, record_dir, frame_number, timestamp);
+            } else {
+                sprintf(filename, record_dir, frame_number, current_timestamp());
+            }
         } else {
             sprintf(filename, record_dir, frame_number);
         }
@@ -317,7 +291,11 @@ format_filename(char *filename, const char *record_dir, int frame_number) {
     } else if (strstr(record_dir, "%ld")) {
         // uint32_t now = SDL_GetTicks();
         // uint64_t now = (unsigned long)time(NULL);
-        sprintf(filename, record_dir, current_timestamp());
+        if (timestamp) {
+            sprintf(filename, record_dir, timestamp);
+        } else {
+            sprintf(filename, record_dir, current_timestamp());
+        }
         return filename;
     }
     sprintf(filename, record_dir, 0);
@@ -338,7 +316,7 @@ handle_event(SDL_Event *event, const struct scrcpy_options *options) {
             // ADDED BY km.yang(2021.02.02): jpg recording options 
             if (options->record_frames) {
                 char *filename = SDL_malloc(256);
-                format_filename(filename, options->record_dir, decoder.codec_ctx->frame_number);
+                format_filename(filename, options->record_dir, decoder.codec_ctx->frame_number, 0);
                 mutex_lock(video_buffer.mutex);
                 const AVFrame *frame = video_buffer_consume_rendered_frame(&video_buffer);
                 record_frames_as_jpeg(frame, filename);
@@ -476,9 +454,6 @@ scrcpy(const struct scrcpy_options *options) {
     if (!server_init(&server)) {
         return false;
     }
-    // ADDED BY km.yang(2021.02.17): attach timestamp to filename
-    char ts_filename[256];
-    // END
     bool ret = false;
 
     bool server_started = false;
@@ -599,9 +574,6 @@ scrcpy(const struct scrcpy_options *options) {
     if (!stream_start(&stream)) {
         goto end;
     }
-    // ADDED BY km.yang(2021.02.17): attach timestamp to filename
-    format_filename(ts_filename, options->record_filename, 0);
-    // END
     stream_started = true;
 
     if (options->display) {
@@ -648,9 +620,13 @@ scrcpy(const struct scrcpy_options *options) {
 
     ret = event_loop(options);
     // ADDED BY km.yang(2021.02.17): attach timestamp to filename
-    // move the recred mp4 file to ts_filename
-    if (rename(options->record_filename, ts_filename) != 0) {
-        LOGE("Could not rename the record file from %s to %s", options->record_filename, ts_filename);
+    // rename the recred mp4 file to ts_filename
+    if (record) {
+        char ts_filename[256];
+        format_filename(ts_filename, options->record_filename, 0, recorder.timestamp);
+        if (rename(options->record_filename, ts_filename) != 0) {
+            LOGE("Could not rename the record file from %s to %s", options->record_filename, ts_filename);
+        }
     }
     // END
     LOGD("quit...");
