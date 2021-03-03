@@ -476,7 +476,9 @@ scrcpy(const struct scrcpy_options *options) {
     if (!server_init(&server)) {
         return false;
     }
-
+    // ADDED BY km.yang(2021.02.17): attach timestamp to filename
+    char ts_filename[256];
+    // END
     bool ret = false;
 
     bool server_started = false;
@@ -576,22 +578,12 @@ scrcpy(const struct scrcpy_options *options) {
 
     struct recorder *rec = NULL;
     if (record) {
-        // MODIFIED BY km.yang(2021.02.17): attach timestamp to filename
-        // if (!recorder_init(&recorder,
-        //                    options->record_filename,
-        //                    options->record_format,
-        //                    frame_size)) {
-        //     goto end;
-        // }
-        char filename[256];
-        format_filename(filename, options->record_filename, 0);
         if (!recorder_init(&recorder,
-                           filename,
+                           options->record_filename,
                            options->record_format,
                            frame_size)) {
             goto end;
         }
-        // END
         rec = &recorder;
         recorder_initialized = true;
     }
@@ -607,6 +599,9 @@ scrcpy(const struct scrcpy_options *options) {
     if (!stream_start(&stream)) {
         goto end;
     }
+    // ADDED BY km.yang(2021.02.17): attach timestamp to filename
+    format_filename(ts_filename, options->record_filename, 0);
+    // END
     stream_started = true;
 
     if (options->display) {
@@ -652,6 +647,12 @@ scrcpy(const struct scrcpy_options *options) {
     input_manager_init(&input_manager, options);
 
     ret = event_loop(options);
+    // ADDED BY km.yang(2021.02.17): attach timestamp to filename
+    // move the recred mp4 file to ts_filename
+    if (rename(options->record_filename, ts_filename) != 0) {
+        LOGE("Could not rename the record file from %s to %s", options->record_filename, ts_filename);
+    }
+    // END
     LOGD("quit...");
 
     screen_destroy(&screen);

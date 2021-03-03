@@ -29,10 +29,10 @@ scrcpy_print_usage(const char *arg0) {
         "\n"
         // END
         // ADDED BY km.yang(2021.02.02): jpg recording options
-        "    --record-frames file-%%d-%%u.jpg\n"
+        "    --record-frames file-%%d-%%ld.jpg\n"
         "        Record screen to jpegs.\n"
         "        The '%%d' of filename will be assigned a frame_pts.\n"
-        "        The '%%u' of filename will be assigned a time ticks(a milliseconds since the SDL library initialization).\n"
+        "        The '%%ld' of filename will be assigned a timestamp.\n"
         "\n"
         // END
         "    --always-on-top\n"
@@ -142,10 +142,11 @@ scrcpy_print_usage(const char *arg0) {
         "        drag & drop. It is passed as-is to \"adb push\".\n"
         "        Default is \"/sdcard/\".\n"
         "\n"
-        "    -r, --record file.mp4\n"
+        "    -r, --record file-%%ld.mp4\n"
         "        Record screen to file.\n"
         "        The format is determined by the --record-format option if\n"
         "        set, or by the file extension (.mp4 or .mkv).\n"
+        "        The '%%ld' of filename will be assigned a timestamp.\n"
         "\n"
         "    --record-format format\n"
         "        Force recording format (either mp4 or mkv).\n"
