@@ -3,20 +3,27 @@ package com.genymobile.scrcpy;
 import android.graphics.Rect;
 
 public class Options {
-    private Ln.Level logLevel;
+    public static final int TYPE_LOCAL_SOCKET = 1;
+    public static final int TYPE_WEB_SOCKET = 2;
+
+    private Ln.Level logLevel = Ln.Level.ERROR;
     private int maxSize;
     private int bitRate;
     private int maxFps;
     private int lockedVideoOrientation;
-    private boolean tunnelForward;
+    private boolean tunnelForward = false; //MODIFIED FROM WS-SCRCPY : Default value
     private Rect crop;
     private boolean sendFrameMeta; // send PTS so that the client may record properly
-    private boolean control;
+    private boolean control = true; //MODIFIED FROM WS-SCRCPY : Default value
     private int displayId;
-    private boolean showTouches;
-    private boolean stayAwake;
+    private boolean showTouches = false; //MODIFIED FROM WS-SCRCPY : Default value
+    private boolean stayAwake = false; //MODIFIED FROM WS-SCRCPY : Default value
     private String codecOptions;
     private String encoderName;
+
+    // ADDED FROM WS-SCRCPY
+    private int serverType = TYPE_LOCAL_SOCKET;
+    private int portNumber = 8886;
 
     public Ln.Level getLogLevel() {
         return logLevel;
@@ -31,7 +38,7 @@ public class Options {
     }
 
     public void setMaxSize(int maxSize) {
-        this.maxSize = maxSize;
+        this.maxSize = (maxSize / 8) * 8;
     }
 
     public int getBitRate() {
@@ -128,5 +135,41 @@ public class Options {
 
     public void setEncoderName(String encoderName) {
         this.encoderName = encoderName;
+    }
+
+    //ADDED FROM WS-SCRCPY
+    public int getServerType() {
+        return serverType;
+    }
+    
+    //ADDED FROM WS-SCRCPY : Now can set either if it's websocket or socket.
+    public void setServerType(int type) {
+        if (type == TYPE_LOCAL_SOCKET || type == TYPE_WEB_SOCKET) {
+            this.serverType = type;
+        }
+    }
+    
+    //ADDED FROM WS-SCRCPY
+    public void setPortNumber(int portNumber) {
+        this.portNumber = portNumber;
+    }
+    
+    //ADDED FROM WS-SCRCPY
+    public int getPortNumber() {
+        return this.portNumber;
+    }
+    
+    //ADDED FROM WS-SCRCPY : Get config data
+    @Override
+    public String toString() {
+        return "Options{"
+        + "maxSize=" + maxSize
+        + ", bitRate=" + bitRate
+        + ", maxFps=" + maxFps
+        + ", tunnelForward=" + tunnelForward
+        + ", crop=" + crop
+        + ", sendFrameMeta=" + sendFrameMeta
+        + ", serverType=" + (serverType == TYPE_LOCAL_SOCKET ? "local" : "web")
+        + '}';
     }
 }

@@ -14,6 +14,7 @@ public final class WindowManager {
     private Method freezeRotationMethod;
     private Method isRotationFrozenMethod;
     private Method thawRotationMethod;
+    private Method removeRotationWatcherMethod;
 
     public WindowManager(IInterface manager) {
         this.manager = manager;
@@ -55,6 +56,14 @@ public final class WindowManager {
         return thawRotationMethod;
     }
 
+    // ADD FROM WS-SCRCPY
+    private Method getRemoveRotationWatcherMethod() throws NoSuchMethodException {
+        if (removeRotationWatcherMethod == null) {
+            removeRotationWatcherMethod = manager.getClass().getMethod("removeRotationWatcher");
+        }
+        return removeRotationWatcherMethod;
+    }
+    
     public int getRotation() {
         try {
             Method method = getGetRotationMethod();
@@ -64,7 +73,7 @@ public final class WindowManager {
             return 0;
         }
     }
-
+    
     public void freezeRotation(int rotation) {
         try {
             Method method = getFreezeRotationMethod();
@@ -73,7 +82,7 @@ public final class WindowManager {
             Ln.e("Could not invoke method", e);
         }
     }
-
+    
     public boolean isRotationFrozen() {
         try {
             Method method = getIsRotationFrozenMethod();
@@ -83,7 +92,7 @@ public final class WindowManager {
             return false;
         }
     }
-
+    
     public void thawRotation() {
         try {
             Method method = getThawRotationMethod();
@@ -92,7 +101,7 @@ public final class WindowManager {
             Ln.e("Could not invoke method", e);
         }
     }
-
+    
     public void registerRotationWatcher(IRotationWatcher rotationWatcher, int displayId) {
         try {
             Class<?> cls = manager.getClass();
@@ -106,6 +115,16 @@ public final class WindowManager {
             }
         } catch (Exception e) {
             throw new AssertionError(e);
+        }
+    }
+    
+    // ADD FROM WS-SCRCPY
+    public void unregisterRotationWatcher(IRotationWatcher rotationWatcher) {
+        try {
+            Method method = getRemoveRotationWatcherMethod();
+            method.invoke(manager, rotationWatcher);
+        } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException e) {
+            Ln.e("Could not invoke method", e);
         }
     }
 }
