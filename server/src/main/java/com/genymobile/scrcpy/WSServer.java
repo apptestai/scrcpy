@@ -141,13 +141,12 @@ public class WSServer extends WebSocketServer {
                     serializedMessage.reset();
                     return serializedMessage;
                 case 1:
-                    String text = jsonObject.getString("text");
-                    int textLength = text.getBytes(StandardCharsets.UTF_8).length;
-                    serializedMessage = ByteBuffer.allocate(textLength+5);
+                    byte[] text = jsonObject.getString("text").getBytes(StandardCharsets.UTF_8);
+                    serializedMessage = ByteBuffer.allocate(text.length+5);
                     serializedMessage.mark();
                     serializedMessage.put((byte)type);
-                    serializedMessage.putInt(textLength);
-                    serializedMessage.put(text.getBytes(StandardCharsets.UTF_8));
+                    serializedMessage.putInt(text.length);
+                    serializedMessage.put(text);
                     serializedMessage.reset();
                     return serializedMessage;
                 case 2:
@@ -184,9 +183,8 @@ public class WSServer extends WebSocketServer {
                     serializedMessage.reset();
                     return serializedMessage;
                 case 8:
-                    String clipboard = jsonObject.getString("text");
-                    int clipboardLength = clipboard.getBytes(StandardCharsets.UTF_8).length;
-                    serializedMessage = ByteBuffer.allocate(clipboardLength+6);
+                    byte[] clipboard = jsonObject.getString("text").getBytes(StandardCharsets.UTF_8);
+                    serializedMessage = ByteBuffer.allocate(clipboard.length+6);
                     serializedMessage.mark();
                     serializedMessage.put((byte)type);
                     if (jsonObject.getBoolean("pasteFlag") == true){
@@ -194,8 +192,8 @@ public class WSServer extends WebSocketServer {
                     }else{
                         serializedMessage.put((byte)0);
                     }
-                    serializedMessage.putInt(clipboardLength);
-                    serializedMessage.put(clipboard.getBytes(StandardCharsets.UTF_8));
+                    serializedMessage.putInt(clipboard.length);
+                    serializedMessage.put(clipboard);
                     serializedMessage.reset();
                     return serializedMessage;
                 case 9:
@@ -216,7 +214,37 @@ public class WSServer extends WebSocketServer {
                     serializedMessage.reset();
                     return serializedMessage;
                 case 101:
-                    break;
+                    byte[] codecOptions = jsonObject.getString("codecOptions").getBytes(StandardCharsets.UTF_8);
+                    byte[] encoderNames = jsonObject.getString("encoderNames").getBytes(StandardCharsets.UTF_8);
+                    serializedMessage = ByteBuffer.allocate(36+codecOptions.length+encoderNames.length);
+                    serializedMessage.mark();
+                    serializedMessage.put((byte)type);
+                    serializedMessage.putInt(jsonObject.getInt("bitrate"));
+                    serializedMessage.putInt(jsonObject.getInt("maxFps"));
+                    serializedMessage.put((byte)jsonObject.getInt("iFrameInterval"));
+                    serializedMessage.putShort((short)jsonObject.getInt("width"));
+                    serializedMessage.putShort((short)jsonObject.getInt("height"));
+                    serializedMessage.putShort((short)jsonObject.getInt("left"));
+                    serializedMessage.putShort((short)jsonObject.getInt("top"));
+                    serializedMessage.putShort((short)jsonObject.getInt("right"));
+                    serializedMessage.putShort((short)jsonObject.getInt("bottom"));
+                    if (jsonObject.getBoolean("sendMetaFrame") == true){
+                        serializedMessage.put((byte)1);
+                    }else{
+                        serializedMessage.put((byte)0);
+                    }
+                    serializedMessage.put((byte)jsonObject.getInt("lockedVideoOrientation"));
+                    serializedMessage.putInt(jsonObject.getInt("displayId"));
+                    if (codecOptions.length > 0) {
+                        serializedMessage.putInt(codecOptions.length);
+                        serializedMessage.put(codecOptions);
+                    }
+                    if (encoderNames.length > 0){
+                        serializedMessage.putInt(encoderNames.length);
+                        serializedMessage.put(encoderNames);
+                    }
+                    serializedMessage.reset();
+                    return serializedMessage;
                 case 102:
                     Ln.w("pushFile is currently unavailable");
                     break;
