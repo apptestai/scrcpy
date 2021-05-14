@@ -110,25 +110,25 @@ public class WebSocketConnection extends Connection {
                 byte[] rawDisplayInfo = new byte[24];
                 initialInfo.get(rawDisplayInfo);
                 ByteBuffer buffDisplayInfo = ByteBuffer.wrap(rawDisplayInfo);
-                displayInfo.put("displayIdOfDisplayInfo", buffDisplayInfo.getInt());
-                displayInfo.put("widthOfDisplayInfo", buffDisplayInfo.getInt());
-                displayInfo.put("heightIdOfDisplayInfo", buffDisplayInfo.getInt());
-                displayInfo.put("rotationIdOfDisplayInfo", buffDisplayInfo.getInt());
-                displayInfo.put("layerStackOfDisplayInfo", buffDisplayInfo.getInt());
-                displayInfo.put("flagsOfDisplayInfo", buffDisplayInfo.getInt());
+                displayInfo.put("displayId", buffDisplayInfo.getInt());
+                displayInfo.put("width", buffDisplayInfo.getInt());
+                displayInfo.put("heightId", buffDisplayInfo.getInt());
+                displayInfo.put("rotationId", buffDisplayInfo.getInt());
+                displayInfo.put("layerStack", buffDisplayInfo.getInt());
+                displayInfo.put("flags", buffDisplayInfo.getInt());
                 singleInfo.put("displayInfo", displayInfo);
                 
                 int screenInfoLength = initialInfo.getInt();
                 if (screenInfoLength>0){
                     byte[] rawScreenInfo = new byte[screenInfoLength];
                     ByteBuffer buffScrenInfo = ByteBuffer.wrap(rawScreenInfo);
-                    screenInfo.put("leftOfScreenInfo", buffScrenInfo.getInt());
-                    screenInfo.put("topOfScreenInfo", buffScrenInfo.getInt());
-                    screenInfo.put("rightOfScreenInfo", buffScrenInfo.getInt());
-                    screenInfo.put("bottomOfScreenInfo", buffScrenInfo.getInt());
-                    screenInfo.put("widthOfScreenInfo", buffScrenInfo.getInt());
-                    screenInfo.put("heightOfScreenInfo", buffScrenInfo.getInt());
-                    screenInfo.put("rotationOfScreenInfo", (int)(buffScrenInfo.getInt()&0xffffffffL));
+                    screenInfo.put("left", buffScrenInfo.getInt());
+                    screenInfo.put("top", buffScrenInfo.getInt());
+                    screenInfo.put("right", buffScrenInfo.getInt());
+                    screenInfo.put("bottom", buffScrenInfo.getInt());
+                    screenInfo.put("width", buffScrenInfo.getInt());
+                    screenInfo.put("height", buffScrenInfo.getInt());
+                    screenInfo.put("rotation", (int)(buffScrenInfo.getInt()&0xffffffffL));
                     singleInfo.put("screenInfo",screenInfo);
                 }
                 int videoSettingsLength = initialInfo.getInt();
@@ -165,7 +165,8 @@ public class WebSocketConnection extends Connection {
                 }
                 data.put(singleInfo);
             }
-            JSONInitialInfo.put("data", data);    
+            JSONInitialInfo.put("data", data);
+            Ln.d("JSON SAYS : " + JSONInitialInfo.toString());    
             webSocket.send(JSONInitialInfo.toString());
         }catch(Exception e){
 
