@@ -59,8 +59,10 @@ public final class DesktopConnection extends Connection {
                 localServerSocket.close();
             }
         } else {
+            Ln.d("SIMON SAYS : create video socket");
             videoSocket = connect(SOCKET_NAME);
             try {
+                Ln.d("SIMON SAYS : create control socket");
                 controlSocket = connect(SOCKET_NAME);
             } catch (IOException | RuntimeException e) {
                 videoSocket.close();

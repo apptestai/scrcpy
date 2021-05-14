@@ -4,6 +4,7 @@ import android.graphics.Rect;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -194,6 +195,7 @@ public class VideoSettings {
 
     public static void mergeFromByteArray(VideoSettings videoSettings, byte[] bytes) {
         ByteBuffer data = ByteBuffer.wrap(bytes);
+        Ln.d("SIMON SAYS : VIDEO SETTINGS ARE ~ " + Arrays.toString(bytes));
         int bitRate = data.getInt();
         int maxFps = data.getInt();
         byte iFrameInterval = data.get();

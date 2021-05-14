@@ -17,8 +17,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-// TODO
-// A LOT TO SEE HERE
 public class ScreenEncoder implements Connection.StreamInvalidateListener, Runnable {
 
     private static final int DEFAULT_I_FRAME_INTERVAL = 10; // seconds

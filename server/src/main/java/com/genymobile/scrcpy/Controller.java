@@ -58,6 +58,7 @@ public class Controller {
     }
 
     public void handleEvent(ControlMessage msg) {
+        Ln.d("SIMON SAYS : msg type code is " + msg.getType());
         switch (msg.getType()) {
             case ControlMessage.TYPE_INJECT_KEYCODE:
                 if (device.supportsInputEvents()) {
@@ -127,6 +128,7 @@ public class Controller {
         if (keepPowerModeOff && action == KeyEvent.ACTION_UP && (keycode == KeyEvent.KEYCODE_POWER || keycode == KeyEvent.KEYCODE_WAKEUP)) {
             schedulePowerModeOff();
         }
+        Ln.d("SIMON SAYS : injecting type : 0" + ", action : " + action + ", keycode : " + keycode + ", repeat : " +repeat + ", metastate : " + metaState);
         return device.injectKeyEvent(action, keycode, repeat, metaState);
     }
 
@@ -159,7 +161,7 @@ public class Controller {
 
     private boolean injectTouch(int action, long pointerId, Position position, float pressure, int buttons) {
         long now = SystemClock.uptimeMillis();
-
+        Ln.d("SIMON SAYS : touch injection - " + action + " " + pointerId + " " + position + " " + pressure + " " + buttons);
         Point point = device.getPhysicalPoint(position);
         if (point == null) {
             Ln.w("Ignore touch event, it was generated for a different device size");

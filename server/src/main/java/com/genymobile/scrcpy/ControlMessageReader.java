@@ -52,6 +52,7 @@ public class ControlMessageReader {
     // ADDED FROM WS-SCRCPY : Throws the whole buffer into functions instead of just reading it.
     public ControlMessage parseEvent(ByteBuffer buffer) {
         if (!buffer.hasRemaining()) {
+            Ln.d("SIMON SAYS: buffer has nothing remained");
             return null;
         }
         int savedPosition = buffer.position();

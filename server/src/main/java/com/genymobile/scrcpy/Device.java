@@ -156,7 +156,9 @@ public final class Device {
             return null;
         }
         Rect contentRect = screenInfo.getContentRect();
+        Ln.d("SIMON SAYS : content rect is " + contentRect.toString());
         Point point = devicePosition.getPoint();
+        Ln.d("SIMON SAYS : content rect is " + point.toString());
         int convertedX = contentRect.left + point.getX() * contentRect.width() / unlockedVideoSize.getWidth();
         int convertedY = contentRect.top + point.getY() * contentRect.height() / unlockedVideoSize.getHeight();
         return new Point(convertedX, convertedY);
