@@ -4,6 +4,10 @@ import android.media.MediaCodecInfo;
 
 import org.java_websocket.WebSocket;
 
+import org.json.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONException;
+
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -82,10 +86,90 @@ public class WebSocketConnection extends Connection {
     }
 
     public static void sendInitialInfo(ByteBuffer initialInfo, WebSocket webSocket, int clientId) {
-        initialInfo.position(initialInfo.capacity() - 4);
-        initialInfo.putInt(clientId);
+        // initialInfo.position(initialInfo.capacity() - 4);
+        // initialInfo.putInt(clientId);
         initialInfo.rewind();
-        webSocket.send(initialInfo);
+        try{
+            JSONObject JSONInitialInfo = new JSONObject();
+            JSONArray data = new JSONArray();
+            byte[] rawHeader = new byte["scrcpy_initial".length()];
+            byte[] rawDeviceName = new byte[64];
+            initialInfo.get(rawHeader);
+            initialInfo.get(rawDeviceName);
+            String header = new String(rawHeader);
+            JSONInitialInfo.put("header",header);
+            String deviceName = new String(rawDeviceName);
+            JSONInitialInfo.put("deviceName",deviceName.replace("\0", ""));
+            int displaysCount = initialInfo.getInt();
+            for (int i=0; i<displaysCount; i++){
+                JSONObject singleInfo = new JSONObject();
+                JSONObject displayInfo = new JSONObject();
+                JSONObject screenInfo = new JSONObject();
+                JSONObject videoSettings = new JSONObject();
+                
+                byte[] rawDisplayInfo = new byte[24];
+                initialInfo.get(rawDisplayInfo);
+                ByteBuffer buffDisplayInfo = ByteBuffer.wrap(rawDisplayInfo);
+                displayInfo.put("displayIdOfDisplayInfo", buffDisplayInfo.getInt());
+                displayInfo.put("widthOfDisplayInfo", buffDisplayInfo.getInt());
+                displayInfo.put("heightIdOfDisplayInfo", buffDisplayInfo.getInt());
+                displayInfo.put("rotationIdOfDisplayInfo", buffDisplayInfo.getInt());
+                displayInfo.put("layerStackOfDisplayInfo", buffDisplayInfo.getInt());
+                displayInfo.put("flagsOfDisplayInfo", buffDisplayInfo.getInt());
+                singleInfo.put("displayInfo", displayInfo);
+                
+                int screenInfoLength = initialInfo.getInt();
+                if (screenInfoLength>0){
+                    byte[] rawScreenInfo = new byte[screenInfoLength];
+                    ByteBuffer buffScrenInfo = ByteBuffer.wrap(rawScreenInfo);
+                    screenInfo.put("leftOfScreenInfo", buffScrenInfo.getInt());
+                    screenInfo.put("topOfScreenInfo", buffScrenInfo.getInt());
+                    screenInfo.put("rightOfScreenInfo", buffScrenInfo.getInt());
+                    screenInfo.put("bottomOfScreenInfo", buffScrenInfo.getInt());
+                    screenInfo.put("widthOfScreenInfo", buffScrenInfo.getInt());
+                    screenInfo.put("heightOfScreenInfo", buffScrenInfo.getInt());
+                    screenInfo.put("rotationOfScreenInfo", (int)(buffScrenInfo.getInt()&0xffffffffL));
+                    singleInfo.put("screenInfo",screenInfo);
+                }
+                int videoSettingsLength = initialInfo.getInt();
+                if (videoSettingsLength>0){
+                    byte[] rawVideoSettings = new byte[videoSettingsLength];
+                    ByteBuffer buffVideoSettings = ByteBuffer.wrap(rawVideoSettings);
+                    videoSettings.put("bitrate", buffVideoSettings.getInt());
+                    videoSettings.put("maxFps", buffVideoSettings.getInt());
+                    videoSettings.put("iFrameInterval", (int)buffVideoSettings.get());
+                    videoSettings.put("width", (int)buffVideoSettings.getShort());
+                    videoSettings.put("height", (int)buffVideoSettings.getShort());
+                    videoSettings.put("left", (int)buffVideoSettings.getShort());
+                    videoSettings.put("top", (int)buffVideoSettings.getShort());
+                    videoSettings.put("right", (int)buffVideoSettings.getShort());
+                    videoSettings.put("bottom", (int)buffVideoSettings.getShort());
+                    videoSettings.put("sendFrameData", (int)buffVideoSettings.get());
+                    videoSettings.put("lockedVideoOrientation", (int)buffVideoSettings.get());
+                    videoSettings.put("displayId", buffVideoSettings.getInt());
+                    int codecOptionLength = buffVideoSettings.getInt();
+                    if (codecOptionLength>0){
+                        byte[] rawCodecOption = new byte[codecOptionLength];
+                        buffVideoSettings.get(rawCodecOption);
+                        String codecOption = new String(rawCodecOption);
+                        videoSettings.put("codecOption", codecOption);
+                    }
+                    int encoderNameLength = buffVideoSettings.getInt();
+                    if (encoderNameLength>0){
+                        byte[] rawEncoderNames = new byte[encoderNameLength];
+                        buffVideoSettings.get(rawEncoderNames);
+                        String encoderNames = new String(rawEncoderNames);
+                        videoSettings.put("encoderNames", encoderNames);
+                    }
+                    singleInfo.put("videoSettings",videoSettings);
+                }
+                data.put(singleInfo);
+            }
+            JSONInitialInfo.put("data", data);    
+            webSocket.send(JSONInitialInfo.toString());
+        }catch(Exception e){
+
+        }
     }
 
     public void sendDeviceMessage(DeviceMessage msg) {
