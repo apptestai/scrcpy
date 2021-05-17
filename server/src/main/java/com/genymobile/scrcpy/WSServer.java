@@ -101,24 +101,15 @@ public class WSServer extends WebSocketServer {
     @Override
     public void onMessage(WebSocket webSocket, String message) {
         String address = webSocket.getRemoteSocketAddress().getAddress().getHostAddress();
+        //ADDED BY JAKOB
         ByteBuffer serializedMessage = toSerialize(message);
-        Ln.d(serializedMessage.toString());
         Ln.d("BUFFER REMAINS : " + serializedMessage.remaining());
+        Ln.d(serializedMessage.toString());
         this.onMessage(webSocket, serializedMessage);
-        // try{
-        //     ByteBuffer serializedMessage = toSerialize(message);
-        //     Ln.d(serializedMessage.toString());
-        //     this.onMessage(webSocket, serializedMessage);
-        // }catch (Exception e){
-        //     Ln.w("?  Client from " + address + " says: \"" + message + "\"");
-        // }
-        /**
-         * TODO:
-         *      1. ByteBuffer msg = toSerialize(message); //toSerialize는 json 형식의 message를 바이트형식으로 시리얼라이징을한다.
-         *      2. this.onMessage(webSocket, msg);
-         **/
+        //
     }
 
+    //ADDED BY JAKOB
     private ByteBuffer toSerialize(String msg){
         try{
             ByteBuffer serializedMessage;

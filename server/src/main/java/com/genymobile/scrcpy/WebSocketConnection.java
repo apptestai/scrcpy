@@ -80,7 +80,21 @@ public class WebSocketConnection extends Connection {
                 if (!webSocket.isOpen() || info == null) {
                     continue;
                 }
-                webSocket.send(data);
+                //ADDED BY JAKOB
+                try{
+                    JSONObject deviceMessage = new JSONObject();
+                    byte[] rawHeader = new byte[MAGIC_BYTES_MESSAGE.length];
+                    data.get(rawHeader);
+                    byte[] rawMessage = new byte[data.remaining()];
+                    data.get(rawMessage);
+                    String message = new String(rawMessage);
+                    deviceMessage.put("message", message.replace("\0", ""));
+                    webSocket.send(deviceMessage.toString());
+                }catch(Exception e){
+                    Ln.w("FAILED TO PARSE DEVICE MESSAGE TO JSON");
+                }
+                //
+                // webSocket.send(data);
             }
         }
     }
@@ -89,10 +103,13 @@ public class WebSocketConnection extends Connection {
         // initialInfo.position(initialInfo.capacity() - 4);
         // initialInfo.putInt(clientId);
         initialInfo.rewind();
+        //webSocket.send(initialInfo);
+
+        //ADDED BY JAKOB
         try{
             JSONObject JSONInitialInfo = new JSONObject();
             JSONArray data = new JSONArray();
-            byte[] rawHeader = new byte["scrcpy_initial".length()];
+            byte[] rawHeader = new byte[MAGIC_BYTES_INITIAL.length];
             byte[] rawDeviceName = new byte[64];
             initialInfo.get(rawHeader);
             initialInfo.get(rawDeviceName);
@@ -171,6 +188,7 @@ public class WebSocketConnection extends Connection {
         }catch(Exception e){
 
         }
+        //
     }
 
     public void sendDeviceMessage(DeviceMessage msg) {
