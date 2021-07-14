@@ -1,5 +1,7 @@
 # Frequently Asked Questions
 
+[Read in another language](#translations)
+
 Here are the common reported problems and their status.
 
 
@@ -39,8 +41,11 @@ Check [stackoverflow][device-unauthorized].
 
 >     adb: error: failed to get feature set: no devices/emulators found
 
+Check that you correctly enabled [adb debugging][enable-adb].
+
 If your device is not detected, you may need some [drivers] (on Windows).
 
+[enable-adb]: https://developer.android.com/studio/command-line/adb.html#Enabling
 [drivers]: https://developer.android.com/studio/run/oem-usb.html
 
 
@@ -109,16 +114,6 @@ In developer options, enable:
 > _Allow granting permissions and simulating input via USB debugging_
 
 [simulating input]: https://github.com/Genymobile/scrcpy/issues/70#issuecomment-373286323
-
-
-### Mouse clicks at wrong location
-
-On MacOS, with HiDPI support and multiple screens, input location are wrongly
-scaled. See [#15].
-
-[#15]: https://github.com/Genymobile/scrcpy/issues/15
-
-Open _scrcpy_ directly on the monitor you use it.
 
 
 ### Special characters do not work
@@ -237,3 +232,11 @@ You could also edit (a copy of) `scrcpy-console.bat` or `scrcpy-noconsole.vbs`
 to add some arguments.
 
 [show file extensions]: https://www.howtogeek.com/205086/beginner-how-to-make-windows-show-file-extensions/
+
+
+## Translations
+
+This FAQ is available in other languages:
+
+ - [Italiano (Italiano, `it`) - v1.17](FAQ.it.md)
+ - [한국어 (Korean, `ko`) - v1.11](FAQ.ko.md)
